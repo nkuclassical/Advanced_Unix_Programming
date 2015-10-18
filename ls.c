@@ -252,6 +252,74 @@ void print_simple_pro(FTSENT*p){
 		(void)putchar(' ');
 	col++;
 
+
+	/*Start form this line!*/
+	static FTSENT **array;
+	static int lastentries = -1;
+	FTSENT *p;
+	int base, chcnt, col, colwidth, num;
+	int numcols, numrows, row;
+
+	colwidth = dp->maxlen;
+	if (f_inode)
+		colwidth += dp->s_inode + 1;
+	if (f_size) {
+		if (f_humanize)
+			colwidth += dp->s_size + 1;
+		else
+			colwidth += dp->s_block + 1;
+	}
+	if (f_type || f_typedir)
+		colwidth += 1;
+
+	colwidth += 1;
+
+	if (termwidth < 2 * colwidth) {
+		printscol(dp);
+		return;
+	}
+
+	/*
+	 * Have to do random access in the linked list -- build a table
+	 * of pointers.
+	 */
+	if (dp->entries > lastentries) {
+		FTSENT **newarray;
+
+		newarray = realloc(array, dp->entries * sizeof(FTSENT *));
+		if (newarray == NULL) {
+			warn(NULL);
+			printscol(dp);
+			return;
+		}
+		lastentries = dp->entries;
+		array = newarray;
+	}
+	for (p = dp->list, num = 0; p; p = p->fts_link)
+		if (p->fts_number != NO_PRINT)
+			array[num++] = p;
+
+	numcols = termwidth / colwidth;
+	colwidth = termwidth / numcols;		/* spread out if possible */
+	numrows = num / numcols;
+	if (num % numcols)
+		++numrows;
+
+	printtotal(dp);				/* "total: %u\n" */
+
+	for (row = 0; row < numrows; ++row) {
+		for (base = row, chcnt = col = 0; col < numcols; ++col) {
+			chcnt = printaname(array[base], dp->s_inode,
+			    f_humanize ? dp->s_size : dp->s_block);
+			if ((base += numrows) >= num)
+				break;
+			while (chcnt++ < colwidth)
+				(void)putchar(' ');
+		}
+		(void)putchar('\n');
+	}
+
+
 }
 
 void print_long(FTSENT *p){
@@ -363,15 +431,20 @@ void display(FTSENT *p, FTSENT *list){
 
 		}
 		printf("colwidth%d  colNums%d\n", colwidth,numcols );
+	}
 
-	}
-	for(cur = list; cur; cur = cur->fts_link){
-		if(cur->fts_number == NO_PRINT)continue;
-		printfcn(cur);
-		if(printfcn==print_simple)printf("\n");
-	}
-	if(printfcn==print_across)
+	if(printfcn!=print_simple_pro){
+		for(cur = list; cur; cur = cur->fts_link){
+			if(cur->fts_number == NO_PRINT)continue;
+			printfcn(cur);
+			if(printfcn==print_simple)printf("\n");
+		}
+		if(printfcn==print_across)
 		printf("\n");
+	}else{
+		print_simple_pro(list);
+	}
+	
 }
 int cmp(const FTSENT **a, const FTSENT **b){
 	int a_info, b_info;
@@ -564,22 +637,23 @@ int main(int argc, char*argv[]){
 			
 		}
 	}
+
 	argc-=optind;
 	argv+=optind;
+	struct winsize w;
+	ioctl(0, TIOCGWINSZ, &w);
+	if(w.ws_row!=0){
+		termWidth=w.ws_col;
+	}
+
+
 	if(flag_l){
 		printfcn = print_long;
-	}
-	else if(flag_x){
+	}else if(flag_x){
 		printfcn = print_across;
-		struct winsize w;
-    	ioctl(0, TIOCGWINSZ, &w);
-    	if(w.ws_row!=0){
-			termWidth=w.ws_col;
-    	}
-
-		
-	}
-	else {
+	}else if(flag_C){
+		printfcn=print_simple_pro;
+	}else {
 		printfcn = print_simple;
 	}
 
