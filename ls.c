@@ -4,8 +4,8 @@
  Version: 0.1[snapshot version]
  Author: Yanqiao Zhan (yzhan14@stevens.edu)
  Date Oct/4/2015/18:30:13
- Support options:   -A -a -c -F -f -i -k -l -n -r -S -s -t -u -1 -d -h -q -w -R
- Unsupport options: -C -x
+ Support options:   -A -a -c -F -f -i -k -l -n -r -S -s -t -u -1 -d -h -q -w -R -x
+ Unsupport options: -C 
  *
  */
 
@@ -24,11 +24,13 @@
 #include <fts.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/ioctl.h>
 #include <pwd.h>
 #include <grp.h>
 #include <time.h>
 #include <getopt.h>
 #include <ctype.h>
+#include <math.h>
 #include "ls.h"
 
 int flag_A=0;
@@ -53,6 +55,7 @@ int flag_u=0;
 int flag_w=0;
 int flag_x=0;
 int flag_1=0;
+
 int termWidth=80;
 
 int success=EXIT_SUCCESS;
@@ -61,7 +64,14 @@ int fail=EXIT_FAILURE;
 int sortKey=BY_NAME;
 int fts_options=FTS_PHYSICAL;
 
+int maxLen=0;
+long maxInode=0;
+long maxBlock=0;
 int BlockSize=512;
+int chcnt=0;
+int col=0;
+int colwidth=0;
+int numcols=0;
 
 
 void usage(void){
@@ -142,8 +152,10 @@ void print_time(time_t rawtime){
 /**
 p is the parent directory of the display list
 **/
-void print_name(FTSENT*p){
-	char*temp = (char*)malloc(strlen(p->fts_name)+1);
+int print_name(FTSENT*p){
+
+	char temp[1024];
+	int chcnt=0;
 	strcpy(temp,p->fts_name);
 	if(flag_q==1||flag_w==0){
 		int i=0;
@@ -153,33 +165,33 @@ void print_name(FTSENT*p){
 			}
 		}
 	}
-	printf("%s", temp);
+	chcnt+=printf("%s", temp);
 	
 	if(flag_F){				//-f display a slash ...
 		struct stat *sb  = p->fts_statp;
 			switch(sb->st_mode & S_IFMT){
 			case S_IFDIR:
-				printf("/\n");
-				return;
+				chcnt+=printf("/");
+				return chcnt;
 			case S_IFLNK:
-				printf("@\n");
-				return;
+				chcnt+=printf("@");
+				return chcnt;
 			case S_IFWHT:
-				printf("%%\n");
-				return;
+				chcnt+=printf("%%");
+				return chcnt;
 			case S_IFSOCK:
-				printf("=\n");
-				return;
+				chcnt+=printf("=");
+				return chcnt;
 			case S_IFIFO:
-				printf("|\n");
-				return;
+				chcnt+=printf("|");
+				return chcnt;
 			}
 		if(sb->st_mode & (S_IXUSR|S_IXGRP|S_IXOTH))
-			printf("*\n");
-		else printf("\n");
+			chcnt+=printf("*");
 
-		
-	}else printf("\n");
+	}
+
+	return chcnt;
 	
 }
 
@@ -196,6 +208,51 @@ void print_simple(FTSENT*p){
 	print_name(p);
 }
 
+void print_across(FTSENT*p){ /*-x*/
+	chcnt=0;
+	if (col >= numcols) {
+		chcnt = col = 0;
+		(void)putchar('\n');
+	}
+	if(flag_i){
+		chcnt+=printf("%ju ", p->fts_statp->st_ino);
+	}
+	if(flag_s)
+		chcnt+=printf("%ju ", p->fts_statp->st_blocks*512/BlockSize);
+	chcnt+=print_name(p);
+	chcnt+=printf(" ");
+	if (col >= numcols) {
+			chcnt = col = 0;
+			(void)putchar('\n');
+	}
+	while (chcnt++ < colwidth)
+		(void)putchar(' ');
+	col++;
+	
+}
+
+void print_simple_pro(FTSENT*p){
+	chcnt=0;
+	if (col >= numcols) {
+		chcnt = col = 0;
+		(void)putchar('\n');
+	}
+	if(flag_i){
+		chcnt+=printf("%ju ", p->fts_statp->st_ino);
+	}
+	if(flag_s)
+		chcnt+=printf("%ju ", p->fts_statp->st_blocks*512/BlockSize);
+	chcnt+=print_name(p);
+	chcnt+=printf(" ");
+	if (col >= numcols) {
+			chcnt = col = 0;
+			(void)putchar('\n');
+	}
+	while (chcnt++ < colwidth)
+		(void)putchar(' ');
+	col++;
+
+}
 
 void print_long(FTSENT *p){
 	struct stat *sp;
@@ -258,14 +315,20 @@ void print_long(FTSENT *p){
 		else
 			printf(" -> %s", tmp);
 	}
+	printf("\n");
 }
 
 void display(FTSENT *p, FTSENT *list){
 	
 	FTSENT*cur;
+	maxLen=0;
+	numcols=0;
+	colwidth=0;
 
 	for(cur = list; cur; cur = cur->fts_link){
-		
+		if(cur->fts_namelen>maxLen){
+			maxLen=cur->fts_namelen;
+		}
 		if(p == NULL && cur->fts_info ==FTS_D && !(flag_d)){
 			cur->fts_number = NO_PRINT;
 			continue;
@@ -276,10 +339,39 @@ void display(FTSENT *p, FTSENT *list){
 		}
 		
 	}
+	if(flag_x){
+		colwidth = maxLen;
+		if (flag_i)
+			colwidth +=  6+1;
+		if (flag_s) {
+			if (flag_h)
+				colwidth += 6+1;
+			else
+				colwidth += 10+1;
+		}
+
+		if (flag_F)
+			colwidth += 1;
+		colwidth += 1;
+		
+		if (termWidth < 2 * colwidth) {
+			printfcn=print_simple;
+		}else{
+			numcols = termWidth / colwidth;
+			colwidth = termWidth / numcols;		/* spread out if possible */
+			chcnt = col = 0;
+
+		}
+		printf("colwidth%d  colNums%d\n", colwidth,numcols );
+
+	}
 	for(cur = list; cur; cur = cur->fts_link){
 		if(cur->fts_number == NO_PRINT)continue;
 		printfcn(cur);
+		if(printfcn==print_simple)printf("\n");
 	}
+	if(printfcn==print_across)
+		printf("\n");
 }
 int cmp(const FTSENT **a, const FTSENT **b){
 	int a_info, b_info;
@@ -352,13 +444,16 @@ int main(int argc, char*argv[]){
 
 	if(argc==0)return 0;
 	char ch;
+	/* struct winsize win;*/
 	char *defualt_dir[] = {".", NULL};
 	flag_A = (getuid()==0)?1:0;
-	if(isatty(1)){ /*Output is terminal*/
+	if(isatty(STDOUT_FILENO)){ /*Output is terminal*/
+		
 		flag_q=1;
 	}else{
 		flag_w=1;  /*Output is not terminal*/
 	}
+	
 	while ((ch = getopt(argc, argv, "AacCdFfhiklnqRrSstuwx1"))!= -1) {
 		switch(ch){
 			case 'w':
@@ -471,10 +566,23 @@ int main(int argc, char*argv[]){
 	}
 	argc-=optind;
 	argv+=optind;
-	if(flag_l)
+	if(flag_l){
 		printfcn = print_long;
-	else 
+	}
+	else if(flag_x){
+		printfcn = print_across;
+		struct winsize w;
+    	ioctl(0, TIOCGWINSZ, &w);
+    	if(w.ws_row!=0){
+			termWidth=w.ws_col;
+    	}
+
+		
+	}
+	else {
 		printfcn = print_simple;
+	}
+
 	if(flag_r){
 		switch(sortKey){
 			case BY_TIME:

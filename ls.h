@@ -19,7 +19,7 @@ int r_st_ctime_compare(const FTSENT *a, const FTSENT *b);
 int r_st_mtime_compare(const FTSENT*a, const FTSENT*b);
 int r_st_atime_compare(const FTSENT*a, const FTSENT*b);
 void print_time(time_t rawtime);
-void print_name(FTSENT*p);
+int print_name(FTSENT*p);
 void print_simple(FTSENT*p);
 void print_long(FTSENT *p);
 void display(FTSENT *p, FTSENT *list);
