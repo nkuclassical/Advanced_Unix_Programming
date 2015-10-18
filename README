@@ -1,4 +1,4 @@
 This is just a snapshot\unchecked\under coding version. Now this program supports the following options: -A -a -c -F -f -i -k -l -n -r -S -s -t -u -1 -d -h -q -R -w -x. Left options: -C will be supported in the next fewer days.
 Another work will be done in the future is divide this huge ls.c file into serveral smaller files according to their own functions. And write a complete\ elegant Makefile.
-
+ 
 -Yanqiao Zhan(yzhan14@stevens.edu)
