@@ -5,7 +5,6 @@
  Author: Yanqiao Zhan (yzhan14@stevens.edu)
  Date Oct/4/2015/18:30:13
  Support options:   -A -a -c -F -f -i -k -l -n -r -S -s -t -u -1 -d -h -q -w -R -x -C
- 
  *
  */
 
@@ -206,11 +205,11 @@ void print_simple(FTSENT*p){
 	if(flag_s)
 		printf("%ju ", p->fts_statp->st_blocks*512/BlockSize);
 	print_name(p);
+	printf("\n");
 }
 
 void print_across(FTSENT*p){ /*-x*/
 	chcnt=0;
-	// printf("%d %d", col, numcols);
 	if (col >= numcols) {
 		chcnt = col = 0;
 		(void)putchar('\n');
@@ -230,8 +229,6 @@ void print_across(FTSENT*p){ /*-x*/
 }
 
 void print_simple_pro(FTSENT*p){
-	// print_name(p);
-	// printf("\n");
 	chcnt=0;
 	if(moreRow!=0&&row>=moreRow&&col>=numcols-1){
 		chcnt = col = 0;
@@ -374,7 +371,6 @@ void display(FTSENT *p, FTSENT *list){
 		colwidth += 1;
 		
 		if (termWidth < 2 * colwidth) {
-			// printfcn=print_simple;
 			numcols=1;
 			numrows=entriesNum;
 
@@ -382,7 +378,6 @@ void display(FTSENT *p, FTSENT *list){
 			numcols = termWidth / colwidth;
 			colwidth = termWidth / numcols;		/* spread out if possible */
 			numrows = (int)(ceil((double)entriesNum / numcols));
-			// printf("maxLen:%d  numcols:%d   termWidth:%d   colwidth:%d\n",maxLen, numcols, termWidth, colwidth );
 			chcnt = col = 0;
 
 		}
@@ -390,18 +385,13 @@ void display(FTSENT *p, FTSENT *list){
 
 	if(flag_C){
 		if(numrows>0){
-		// printf("entriesNum:%d\n", entriesNum);
 		FTSENT *array[32768], *newarray[32768];
 		for(cur=list;cur;cur=cur->fts_link){
 			if(cur->fts_number==NO_PRINT)continue;
 			newarray[num++]=cur;
 		
 		}
-	// printf(" numrows%d  numcols%d\n", numrows, numcols);
-		// while(entriesNum - entriesNum/numcols *numcols >= numrows){
 	while(entriesNum - numrows*(numcols-1) <=0){
-			
-			// printf(" numrows%d  numcols%d\n", numrows, numcols);
 			numcols--;
 			numrows = (int)(ceil((double)entriesNum / numcols));
 		}
@@ -410,25 +400,21 @@ void display(FTSENT *p, FTSENT *list){
 		
 		moreRow=entriesNum - numrows*(numcols-1);
 		int base=0;
-		// printf("moreRow%d  numrows%d  numcols%d\n", moreRow, numrows, numcols);
 		if(moreRow==0){
 			for(Row=0;Row<numrows;Row++){
 				for(Col=0;Col<numcols;Col++){
-					// printf("%d %d %d %d\n",Col, numrows, Row, Col*numrows+Row);
 					array[base++]=newarray[Col*numrows+Row];
 				}
 			}	
 		}else{
 			for(Row=0;Row<moreRow;Row++){
 				for(Col=0;Col<numcols;Col++){
-					// printf("%d %d %d %d\n",Row, numrows, Col, Col*numrows+Row);
 					array[base++]=newarray[Col*numrows+Row];
 				}
 			}
-			// printf("moreRow Finished!\n");
+			
 			for(Row=moreRow;Row<numrows;Row++){
 				for(Col=0;Col<numcols-1;Col++){
-					// printf("%d %d %d %d\n",Row, numrows, Col, Col*numrows+Row);
 					array[base++]=newarray[Col*numrows+Row];
 				}
 			}
@@ -438,10 +424,7 @@ void display(FTSENT *p, FTSENT *list){
 		for(num=0;num<entriesNum;num++){
 			printfcn(array[num]);	
 		}
-		// printf("Are you ok?\n");
 		printf("\n");
-		// free(array);
-		// free(newarray);
 		return;
 		}
 	}
@@ -451,7 +434,6 @@ void display(FTSENT *p, FTSENT *list){
 	for(cur = list; cur; cur = cur->fts_link){
 		if(cur->fts_number == NO_PRINT)continue;
 		printfcn(cur);
-		// if(printfcn==print_simple)printf("\n");
 	}
 	if(printfcn==print_across)
 	printf("\n");
