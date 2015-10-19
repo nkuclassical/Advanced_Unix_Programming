@@ -4,8 +4,8 @@
  Version: 0.1[snapshot version]
  Author: Yanqiao Zhan (yzhan14@stevens.edu)
  Date Oct/4/2015/18:30:13
- Support options:   -A -a -c -F -f -i -k -l -n -r -S -s -t -u -1 -d -h -q -w -R -x
- Unsupport options: -C 
+ Support options:   -A -a -c -F -f -i -k -l -n -r -S -s -t -u -1 -d -h -q -w -R -x -C
+ 
  *
  */
 
@@ -70,8 +70,10 @@ long maxBlock=0;
 int BlockSize=512;
 int chcnt=0;
 int col=0;
+int row=0;
 int colwidth=0;
 int numcols=0;
+int moreRow=0;
 
 
 void usage(void){
@@ -80,7 +82,7 @@ void usage(void){
 } 
 
 int name_compare(const FTSENT *a, const FTSENT *b){
-	return (strcmp(a->fts_name, b->fts_name));
+	return (strcasecmp(a->fts_name, b->fts_name));
 }
 
 int size_compare(const FTSENT *a, const FTSENT *b){
@@ -105,7 +107,7 @@ int st_atime_compare(const FTSENT*a, const FTSENT*b){
 }
 
 int r_name_compare(const FTSENT *a, const FTSENT *b){
-	return -(strcmp(a->fts_name, b->fts_name));
+	return -(strcasecmp(a->fts_name, b->fts_name));
 }
 
 int r_size_compare(const FTSENT *a, const FTSENT *b){
@@ -197,8 +199,6 @@ int print_name(FTSENT*p){
 
 
 
-
-
 void print_simple(FTSENT*p){
 	if(flag_i){
 		printf("%ju ", p->fts_statp->st_ino);
@@ -210,6 +210,7 @@ void print_simple(FTSENT*p){
 
 void print_across(FTSENT*p){ /*-x*/
 	chcnt=0;
+	// printf("%d %d", col, numcols);
 	if (col >= numcols) {
 		chcnt = col = 0;
 		(void)putchar('\n');
@@ -221,10 +222,7 @@ void print_across(FTSENT*p){ /*-x*/
 		chcnt+=printf("%ju ", p->fts_statp->st_blocks*512/BlockSize);
 	chcnt+=print_name(p);
 	chcnt+=printf(" ");
-	if (col >= numcols) {
-			chcnt = col = 0;
-			(void)putchar('\n');
-	}
+	
 	while (chcnt++ < colwidth)
 		(void)putchar(' ');
 	col++;
@@ -232,10 +230,18 @@ void print_across(FTSENT*p){ /*-x*/
 }
 
 void print_simple_pro(FTSENT*p){
+	// print_name(p);
+	// printf("\n");
 	chcnt=0;
+	if(moreRow!=0&&row>=moreRow&&col>=numcols-1){
+		chcnt = col = 0;
+		(void)putchar('\n');
+		row++;
+	}
 	if (col >= numcols) {
 		chcnt = col = 0;
 		(void)putchar('\n');
+		row++;
 	}
 	if(flag_i){
 		chcnt+=printf("%ju ", p->fts_statp->st_ino);
@@ -247,79 +253,11 @@ void print_simple_pro(FTSENT*p){
 	if (col >= numcols) {
 			chcnt = col = 0;
 			(void)putchar('\n');
+			row++;
 	}
 	while (chcnt++ < colwidth)
 		(void)putchar(' ');
 	col++;
-
-
-	/*Start form this line!*/
-	static FTSENT **array;
-	static int lastentries = -1;
-	FTSENT *p;
-	int base, chcnt, col, colwidth, num;
-	int numcols, numrows, row;
-
-	colwidth = dp->maxlen;
-	if (f_inode)
-		colwidth += dp->s_inode + 1;
-	if (f_size) {
-		if (f_humanize)
-			colwidth += dp->s_size + 1;
-		else
-			colwidth += dp->s_block + 1;
-	}
-	if (f_type || f_typedir)
-		colwidth += 1;
-
-	colwidth += 1;
-
-	if (termwidth < 2 * colwidth) {
-		printscol(dp);
-		return;
-	}
-
-	/*
-	 * Have to do random access in the linked list -- build a table
-	 * of pointers.
-	 */
-	if (dp->entries > lastentries) {
-		FTSENT **newarray;
-
-		newarray = realloc(array, dp->entries * sizeof(FTSENT *));
-		if (newarray == NULL) {
-			warn(NULL);
-			printscol(dp);
-			return;
-		}
-		lastentries = dp->entries;
-		array = newarray;
-	}
-	for (p = dp->list, num = 0; p; p = p->fts_link)
-		if (p->fts_number != NO_PRINT)
-			array[num++] = p;
-
-	numcols = termwidth / colwidth;
-	colwidth = termwidth / numcols;		/* spread out if possible */
-	numrows = num / numcols;
-	if (num % numcols)
-		++numrows;
-
-	printtotal(dp);				/* "total: %u\n" */
-
-	for (row = 0; row < numrows; ++row) {
-		for (base = row, chcnt = col = 0; col < numcols; ++col) {
-			chcnt = printaname(array[base], dp->s_inode,
-			    f_humanize ? dp->s_size : dp->s_block);
-			if ((base += numrows) >= num)
-				break;
-			while (chcnt++ < colwidth)
-				(void)putchar(' ');
-		}
-		(void)putchar('\n');
-	}
-
-
 }
 
 void print_long(FTSENT *p){
@@ -334,7 +272,7 @@ void print_long(FTSENT *p){
 	
 	char perm[SIZE];
 	strmode(sp->st_mode, perm);
-	(void)printf("%s \t", perm);
+	(void)printf("%s ", perm);
 	(void)printf("%ju \t", sp->st_nlink);
 	
 	struct passwd *pw = getpwuid(sp->st_uid);
@@ -389,14 +327,23 @@ void print_long(FTSENT *p){
 void display(FTSENT *p, FTSENT *list){
 	
 	FTSENT*cur;
+	int entriesNum;
+	int num;
+	int Row;
+	int Col;
+	int numrows;
+	entriesNum=0;
 	maxLen=0;
 	numcols=0;
 	colwidth=0;
+	num=0;
+	Row=0;
+	Col=0;
+	numrows=0;
+
 
 	for(cur = list; cur; cur = cur->fts_link){
-		if(cur->fts_namelen>maxLen){
-			maxLen=cur->fts_namelen;
-		}
+		
 		if(p == NULL && cur->fts_info ==FTS_D && !(flag_d)){
 			cur->fts_number = NO_PRINT;
 			continue;
@@ -405,9 +352,13 @@ void display(FTSENT *p, FTSENT *list){
 			cur->fts_number = NO_PRINT;
 			continue;
 		}
+		if(cur->fts_namelen>maxLen){
+			maxLen=cur->fts_namelen;
+		}
+		entriesNum++;
 		
 	}
-	if(flag_x){
+	if(flag_x||flag_C){
 		colwidth = maxLen;
 		if (flag_i)
 			colwidth +=  6+1;
@@ -423,27 +374,88 @@ void display(FTSENT *p, FTSENT *list){
 		colwidth += 1;
 		
 		if (termWidth < 2 * colwidth) {
-			printfcn=print_simple;
+			// printfcn=print_simple;
+			numcols=1;
+			numrows=entriesNum;
+
 		}else{
 			numcols = termWidth / colwidth;
 			colwidth = termWidth / numcols;		/* spread out if possible */
+			numrows = (int)(ceil((double)entriesNum / numcols));
+			// printf("maxLen:%d  numcols:%d   termWidth:%d   colwidth:%d\n",maxLen, numcols, termWidth, colwidth );
 			chcnt = col = 0;
 
 		}
-		printf("colwidth%d  colNums%d\n", colwidth,numcols );
 	}
 
-	if(printfcn!=print_simple_pro){
-		for(cur = list; cur; cur = cur->fts_link){
-			if(cur->fts_number == NO_PRINT)continue;
-			printfcn(cur);
-			if(printfcn==print_simple)printf("\n");
+	if(flag_C){
+		if(numrows>0){
+		// printf("entriesNum:%d\n", entriesNum);
+		FTSENT *array[32768], *newarray[32768];
+		for(cur=list;cur;cur=cur->fts_link){
+			if(cur->fts_number==NO_PRINT)continue;
+			newarray[num++]=cur;
+		
 		}
-		if(printfcn==print_across)
+	// printf(" numrows%d  numcols%d\n", numrows, numcols);
+		// while(entriesNum - entriesNum/numcols *numcols >= numrows){
+	while(entriesNum - numrows*(numcols-1) <=0){
+			
+			// printf(" numrows%d  numcols%d\n", numrows, numcols);
+			numcols--;
+			numrows = (int)(ceil((double)entriesNum / numcols));
+		}
+		
+		num=0;
+		
+		moreRow=entriesNum - numrows*(numcols-1);
+		int base=0;
+		// printf("moreRow%d  numrows%d  numcols%d\n", moreRow, numrows, numcols);
+		if(moreRow==0){
+			for(Row=0;Row<numrows;Row++){
+				for(Col=0;Col<numcols;Col++){
+					// printf("%d %d %d %d\n",Col, numrows, Row, Col*numrows+Row);
+					array[base++]=newarray[Col*numrows+Row];
+				}
+			}	
+		}else{
+			for(Row=0;Row<moreRow;Row++){
+				for(Col=0;Col<numcols;Col++){
+					// printf("%d %d %d %d\n",Row, numrows, Col, Col*numrows+Row);
+					array[base++]=newarray[Col*numrows+Row];
+				}
+			}
+			// printf("moreRow Finished!\n");
+			for(Row=moreRow;Row<numrows;Row++){
+				for(Col=0;Col<numcols-1;Col++){
+					// printf("%d %d %d %d\n",Row, numrows, Col, Col*numrows+Row);
+					array[base++]=newarray[Col*numrows+Row];
+				}
+			}
+		}
+		
+		row=0;
+		for(num=0;num<entriesNum;num++){
+			printfcn(array[num]);	
+		}
+		// printf("Are you ok?\n");
 		printf("\n");
-	}else{
-		print_simple_pro(list);
+		// free(array);
+		// free(newarray);
+		return;
+		}
 	}
+
+
+	
+	for(cur = list; cur; cur = cur->fts_link){
+		if(cur->fts_number == NO_PRINT)continue;
+		printfcn(cur);
+		// if(printfcn==print_simple)printf("\n");
+	}
+	if(printfcn==print_across)
+	printf("\n");
+	
 	
 }
 int cmp(const FTSENT **a, const FTSENT **b){
@@ -526,6 +538,8 @@ int main(int argc, char*argv[]){
 	}else{
 		flag_w=1;  /*Output is not terminal*/
 	}
+
+	flag_C=1;
 	
 	while ((ch = getopt(argc, argv, "AacCdFfhiklnqRrSstuwx1"))!= -1) {
 		switch(ch){
