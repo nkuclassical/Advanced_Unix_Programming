@@ -3,7 +3,7 @@
  Name: ls -list directory contents
  Version: 0.1[snapshot version]
  Author: Yanqiao Zhan (yzhan14@stevens.edu)
- Date Oct/4/2015/18:30:13
+ Date Oct/18/2015/18:30:13
  Support options:   -A -a -c -F -f -i -k -l -n -r -S -s -t -u -1 -d -h -q -w -R -x -C
  *
  */
