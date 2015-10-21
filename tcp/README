@@ -1,0 +1,13 @@
+The only one thing that need to be noticed is file access permission. In linux lab, the default umask is 022, so when I want to copy a file, which is 0777, to a destination file, the destination file's access mode become 0755. If we want to get a complete file access permission, change umask to 000 is one way. But it's not suggest, it will open privilege that other person rewrite your own file.
+
+In open() function when oflag contains O_CREAT, it must also explicit the access permission. We can use S_IRUSR|S_IRGRP|S_IROTH or numbers like 0755. This part is in section 4.5 File Access Permissions.
+
+For tcpm, we are asked to use memcpy() and mmap() instead of read() and write(). Actually these two functions are list in section 14.9 Memory-Mapped I/O. My solution is also based on sample code in section 14.9.
+
+Although the big picture was talked in class, some details must be considered. Such as wrong argument number, wrong pathname, overwrite file, destination path without filename, etc. 
+
+In conclusion, as the first coding assignment of CS631, it helps me review C programming and develop procedure.
+
+Thanks a lot!
+
+-Yanqiao Zhan
