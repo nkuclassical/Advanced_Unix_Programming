@@ -1,15 +1,17 @@
 //
-//  main.c
+//  sish.h
 //  sish
 //
 //  Created by Yanqiao Zhan on 12/10/15.
 //  Copyright © 2015 Yanqiao Zhan. All rights reserved.
 //
 
-#include <stdio.h>
+#ifndef sish_h
+#define sish_h
 
-int main(int argc, const char * argv[]) {
-    // insert code here...
-    int 14var;
-    return 0;
-}
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+
+#endif /* sish_h */

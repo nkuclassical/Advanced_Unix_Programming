@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		DC0961D21C19BF3500CF2317 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = DC0961D11C19BF3500CF2317 /* main.c */; };
+		DC0961DA1C19DA2200CF2317 /* builtin.c in Sources */ = {isa = PBXBuildFile; fileRef = DC0961D81C19DA2200CF2317 /* builtin.c */; };
+		DC0961DD1C19DA3900CF2317 /* sish.c in Sources */ = {isa = PBXBuildFile; fileRef = DC0961DB1C19DA3900CF2317 /* sish.c */; };
+		DC0961E01C19DD6200CF2317 /* prompt.c in Sources */ = {isa = PBXBuildFile; fileRef = DC0961DE1C19DD6200CF2317 /* prompt.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +28,12 @@
 /* Begin PBXFileReference section */
 		DC0961CE1C19BF3500CF2317 /* sish */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = sish; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC0961D11C19BF3500CF2317 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		DC0961D81C19DA2200CF2317 /* builtin.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = builtin.c; sourceTree = "<group>"; };
+		DC0961D91C19DA2200CF2317 /* builtin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = builtin.h; sourceTree = "<group>"; };
+		DC0961DB1C19DA3900CF2317 /* sish.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sish.c; sourceTree = "<group>"; };
+		DC0961DC1C19DA3900CF2317 /* sish.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sish.h; sourceTree = "<group>"; };
+		DC0961DE1C19DD6200CF2317 /* prompt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = prompt.c; sourceTree = "<group>"; };
+		DC0961DF1C19DD6200CF2317 /* prompt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = prompt.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +67,12 @@
 			isa = PBXGroup;
 			children = (
 				DC0961D11C19BF3500CF2317 /* main.c */,
+				DC0961D81C19DA2200CF2317 /* builtin.c */,
+				DC0961D91C19DA2200CF2317 /* builtin.h */,
+				DC0961DB1C19DA3900CF2317 /* sish.c */,
+				DC0961DC1C19DA3900CF2317 /* sish.h */,
+				DC0961DE1C19DD6200CF2317 /* prompt.c */,
+				DC0961DF1C19DD6200CF2317 /* prompt.h */,
 			);
 			path = sish;
 			sourceTree = "<group>";
@@ -119,6 +134,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC0961D21C19BF3500CF2317 /* main.c in Sources */,
+				DC0961DD1C19DA3900CF2317 /* sish.c in Sources */,
+				DC0961DA1C19DA2200CF2317 /* builtin.c in Sources */,
+				DC0961E01C19DD6200CF2317 /* prompt.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
