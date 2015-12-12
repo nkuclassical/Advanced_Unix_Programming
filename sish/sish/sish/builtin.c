@@ -30,21 +30,21 @@ int cdCommand(char *path){
      */
     return 0;
 }
-int echoCommand(char *message){
+void echoCommand(char *message){
     pid_t pid;
     
-    if (strcmp(message,"$$")) {
+    if (strcmp(message,"$$") == 0) {
         pid = getpid();
        /* fprintf(stderr, pid); */
-        return 0;
+        return;
         
     }
-    if (strcmp(message, "$?")) {
+    if (strcmp(message, "$?") == 0) {
         fprintf(stderr, "The exit status of last command is: ");
-        return 0;
+        return;
     }
     fprintf(stderr,"%s\n", message);
-    return 0;
+    return;
 }
 
 

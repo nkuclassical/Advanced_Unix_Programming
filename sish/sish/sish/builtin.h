@@ -11,5 +11,5 @@
 
 #include <stdio.h>
 int cdCommand(char*);
-int echoCommand(char*);
+void echoCommand(char*);
 #endif /* builtin_h */
