@@ -10,6 +10,6 @@
 
 int main(int argc, const char * argv[]) {
     // insert code here...
-    int 14var;
+//    int 14var;
     return 0;
 }
