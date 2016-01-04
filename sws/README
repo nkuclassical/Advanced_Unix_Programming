@@ -1,0 +1,52 @@
+CS631 Advanced Programming in the UNIX Environment Final Project
+================================================================
+
+This repository will contain the sources for the final project of
+the group 'nova'.
+
+Please add your sources, Makefile, tests, etc. here.
+
+Please update this README with whatever additional information you
+may wish to include in your final submission.
+Yanqiao Zhan can write
+jwang81 can write.
+ali12 can write.
+
+
+================================================================
+How to run?
+./sws [-dh][-c dir][-i address][-l file][-p port] dir
+
+Teamwork:
+Yanqiao Zhan(yzhan14): network\ cgi exe\ paramter
+process \NetBSD IPV6\fix bug\git support
+Jingxu Wang(jwang81): head\log\read normal file\directory tree present\util
+Ao Li(ali12): daemon and debug\http status code\if not
+modified part\
+
+Some Tips:
+1.If -c specified a path that out of sws root path, then cgi can't be
+executed. e.g ./sws -c ~jschauma/cs_html/ -p 8080 ~yzhan14/cs_html.
+Even there exists a env.cgi in ~jwchauma/cs_html, but as
+~jschauma/cs_html/cgi-bin/env.cgi is out of root path(~yzhan14/cs_html), so
+report 403.
+
+2.If a request starts with /cgi-bin/, sws will treat the request as a cgi
+request even it request a directory path.
+e.g telnet 155.246.89.103 8080
+GET /cgi-bin/ HTTP/1.0
+
+We will report 403, since request has not specified a cgi file.
+
+3. abc equals to /abc, and equals to abc/, and equals to /abc/ and equals to //////abc//////
+Sws uses a stack to handle all path.
+Another case: ./sws ~yzhan14
+            telnet 155.246.89.103 8080
+            GET ../../../../../../../../etc/passwd HTTP/1.0
+After sws simplified client request, request will be converted to GET
+/home/yzhan14/etc/passwd. There is not etc/passwd under /home/yzhan14, so
+sws will report 404.
+
+-Yanqiao Zhan
+updated(Dec 5, 2015)
+
